@@ -126,7 +126,7 @@ export const DeveloperTemplate: React.FC<TemplateProps> = ({ portfolio, isCompac
 
           {/* Interactive terminal prompt */}
           {!isCompact && (
-            <div className="mt-4 p-3 rounded-xl bg-black/60 border border-cyan-500/20 font-mono text-xs">
+            <div className="no-print mt-4 p-3 rounded-xl bg-black/60 border border-cyan-500/20 font-mono text-xs">
               <form onSubmit={handleCommand} className="flex items-center gap-2">
                 <span className="text-emerald-400 font-bold">visitor@portfoliox:~$</span>
                 <input
