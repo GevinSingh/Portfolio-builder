@@ -81,26 +81,6 @@ export const DashboardPage: React.FC = () => {
     window.open(`/p/${portfolio.slug}?download=true`, '_blank');
   };
 
-  const getGreeting = () => {
-    try {
-      const formatter = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'Asia/Kolkata',
-        hour: 'numeric',
-        hour12: false,
-      });
-      const hour = parseInt(formatter.format(new Date()), 10);
-      if (hour >= 5 && hour < 12) return 'Good morning';
-      if (hour >= 12 && hour < 17) return 'Good afternoon';
-      if (hour >= 17 && hour < 22) return 'Good evening';
-      return 'Good evening';
-    } catch {
-      const hour = new Date().getHours();
-      if (hour >= 5 && hour < 12) return 'Good morning';
-      if (hour >= 12 && hour < 17) return 'Good afternoon';
-      return 'Good evening';
-    }
-  };
-
   const navItems = [
     { label: 'Overview', icon: LayoutDashboard, path: '/dashboard', active: true },
     { label: 'Build from Scratch', icon: Wand2, path: '/scratch', badge: 'New' },
@@ -215,7 +195,7 @@ export const DashboardPage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-black text-slate-900 flex items-center gap-2">
-              <span>{getGreeting()}, {portfolio.profile.fullName.split(' ')[0]} 👋</span>
+              <span>Good morning, {portfolio.profile.fullName.split(' ')[0]} 👋</span>
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
               Your professional portfolio is published and connected to Supabase Cloud Database.
