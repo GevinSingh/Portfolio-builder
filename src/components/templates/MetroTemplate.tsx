@@ -190,7 +190,7 @@ export const MetroTemplate: React.FC<TemplateProps> = ({ portfolio, isCompact = 
           </div>
 
           <div className="p-6 sm:p-8 text-[10px] text-slate-500 font-mono border-t border-slate-800/80">
-            Professional Dossier • Tech Humans
+            Professional Portfolio Dossier
           </div>
         </aside>
 

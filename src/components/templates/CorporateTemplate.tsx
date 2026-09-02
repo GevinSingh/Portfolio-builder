@@ -277,7 +277,7 @@ export const CorporateTemplate: React.FC<TemplateProps> = ({ portfolio, isCompac
 
           {/* Bottom Sidebar Footer Accent */}
           <div className="pt-8 text-[11px] text-slate-400 font-mono text-center md:text-left">
-            Verified Digital Resume • Tech Humans
+            Verified Digital Portfolio
           </div>
         </aside>
 

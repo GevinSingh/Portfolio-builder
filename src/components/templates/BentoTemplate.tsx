@@ -391,7 +391,7 @@ export const BentoTemplate: React.FC<TemplateProps> = ({ portfolio, isCompact = 
             </div>
 
             <div className="pt-4 border-t border-white/10 text-center">
-              <span className="text-xs text-slate-400 font-mono">Tech Humans Verified Architecture</span>
+              <span className="text-xs text-slate-400 font-mono">Verified Portfolio Architecture</span>
             </div>
           </div>
 

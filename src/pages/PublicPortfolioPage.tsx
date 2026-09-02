@@ -77,6 +77,9 @@ export const PublicPortfolioPage: React.FC = () => {
   };
 
   React.useEffect(() => {
+    if (portfolio?.profile?.fullName) {
+      document.title = `${portfolio.profile.fullName} - Portfolio`;
+    }
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('download') === 'true') {
       const timer = setTimeout(() => {
@@ -84,9 +87,11 @@ export const PublicPortfolioPage: React.FC = () => {
       }, 700);
       return () => clearTimeout(timer);
     }
-  }, []);
+  }, [portfolio?.profile?.fullName]);
 
   const handleDownloadPortfolio = () => {
+    const originalTitle = document.title;
+    document.title = `${portfolio.profile.fullName} - Portfolio`;
     window.print();
   };
 
@@ -132,7 +137,7 @@ export const PublicPortfolioPage: React.FC = () => {
           <div className="flex items-center gap-1.5 font-mono text-slate-300">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
             <span className="font-bold text-white">{portfolio.profile.fullName}</span>
-            <span className="text-slate-400 hidden md:inline">• Tech Humans Verified Showcase</span>
+            <span className="text-slate-400 hidden md:inline">• Portfolio</span>
           </div>
         </div>
 
@@ -279,9 +284,9 @@ export const PublicPortfolioPage: React.FC = () => {
       </main>
 
       {/* Subtle bottom public footer */}
-      <footer className="border-t border-slate-200 py-8 text-center text-xs text-slate-500">
+      <footer className="no-print border-t border-slate-200/20 py-8 text-center text-xs text-slate-500">
         <div>
-          Published with <Link to="/" className="text-[#1E65FF] hover:underline font-bold">Tech Humans</Link> • Engineered for high-impact careers
+          <span>{portfolio.profile.fullName}</span> • Professional Portfolio
         </div>
       </footer>
 
