@@ -75,6 +75,12 @@ export const DashboardPage: React.FC = () => {
     setTimeout(() => setCopied(false), 2500);
   };
 
+  const handleDownloadPortfolioPDF = () => {
+    triggerConfetti();
+    showToast('Downloading Portfolio PDF', 'Opening print & PDF save view...', 'info');
+    window.open(`/p/${portfolio.slug}?download=true`, '_blank');
+  };
+
   const navItems = [
     { label: 'Overview', icon: LayoutDashboard, path: '/dashboard', active: true },
     { label: 'Build from Scratch', icon: Wand2, path: '/scratch', badge: 'New' },
@@ -199,6 +205,15 @@ export const DashboardPage: React.FC = () => {
           {/* Quick links & Live Preview Button */}
           <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <CloudSyncBadge variant="button" onOpenAuth={() => setShowAuthModal(true)} />
+
+            <button
+              onClick={handleDownloadPortfolioPDF}
+              className="px-3.5 py-2 rounded-xl bg-white border border-slate-200 hover:border-[#1E65FF] text-slate-700 text-xs font-bold uppercase tracking-wider flex items-center gap-2 transition-all shadow-sm cursor-pointer"
+              title="Download Portfolio as PDF"
+            >
+              <Download className="w-3.5 h-3.5 text-[#1E65FF]" />
+              <span>Portfolio PDF</span>
+            </button>
 
             <button
               onClick={handleCopyLink}
@@ -355,7 +370,7 @@ export const DashboardPage: React.FC = () => {
             Quick Actions
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
             
             <Link
               to="/scratch"
@@ -403,6 +418,18 @@ export const DashboardPage: React.FC = () => {
               <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#1E65FF]">Change Style</h3>
               <p className="text-xs text-slate-500 mt-1">Current: <span className="text-slate-900 capitalize">{portfolio.templateId}</span>. Switch in 1 click.</p>
             </Link>
+
+            <button
+              type="button"
+              onClick={handleDownloadPortfolioPDF}
+              className="p-5 rounded-2xl bg-white border border-slate-200 hover:border-[#1E65FF] hover:shadow-md transition-all group shadow-sm text-left cursor-pointer"
+            >
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-[#1E65FF] border border-blue-100 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                <Download className="w-5 h-5" />
+              </div>
+              <h3 className="text-sm font-bold text-slate-900 group-hover:text-[#1E65FF]">Portfolio PDF</h3>
+              <p className="text-xs text-slate-500 mt-1">Export & download your portfolio as a clean PDF.</p>
+            </button>
 
             <Link
               to={`/p/${portfolio.slug}`}

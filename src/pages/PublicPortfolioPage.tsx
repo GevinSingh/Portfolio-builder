@@ -76,16 +76,29 @@ export const PublicPortfolioPage: React.FC = () => {
     showToast('Message Sent Successfully', `Your note was delivered directly to ${portfolio.profile.fullName}.`, 'success');
   };
 
-  const handleDownloadResume = () => {
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('download') === 'true') {
+      const timer = setTimeout(() => {
+        window.print();
+      }, 700);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleDownloadPortfolio = () => {
     triggerConfetti();
-    showToast('PDF Export Generated', `Generating high-res print PDF for ${portfolio.profile.fullName}...`, 'info');
+    showToast('Downloading Portfolio PDF', `Preparing printable PDF for ${portfolio.profile.fullName}...`, 'info');
+    setTimeout(() => {
+      window.print();
+    }, 300);
   };
 
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-slate-700 font-['Inter',sans-serif] flex flex-col relative selection:bg-[#1E65FF] selection:text-white">
       
       {/* Floating Top Showcase Banner */}
-      <div className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-sm">
+      <div className="no-print sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-sm">
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard"
@@ -138,11 +151,12 @@ export const PublicPortfolioPage: React.FC = () => {
           </div>
 
           <button
-            onClick={handleDownloadResume}
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-bold uppercase tracking-wider text-[11px] transition-colors"
+            onClick={handleDownloadPortfolio}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-bold uppercase tracking-wider text-[11px] transition-colors cursor-pointer"
+            title="Download Portfolio as PDF"
           >
             <Download className="w-3.5 h-3.5" />
-            <span>PDF Resume</span>
+            <span>Portfolio PDF</span>
           </button>
 
           <Link
