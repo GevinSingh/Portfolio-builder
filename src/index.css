@@ -112,12 +112,13 @@
     display: none !important;
   }
 
-  /* Zero out root margins and ensure 100% full bleed color reproduction */
+  /* Zero out root margins and prevent forced page height expansion */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    min-height: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
     color-adjust: exact !important;
@@ -128,28 +129,45 @@
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    min-height: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   main {
-    padding: 12mm 14mm !important;
+    padding: 8mm 10mm !important;
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    height: auto !important;
+    min-height: auto !important;
     box-sizing: border-box !important;
   }
 
-  /* Prevent awkward page cuts through cards, headings, and lists */
-  section,
+  /* Compact margins for elegant, tight PDF layout without huge empty voids */
+  .mb-12, .mb-10, .mb-8 {
+    margin-bottom: 1.25rem !important;
+  }
+  .mb-6 {
+    margin-bottom: 0.75rem !important;
+  }
+  .space-y-6 > * + * {
+    margin-top: 0.75rem !important;
+  }
+  .space-y-4 > * + * {
+    margin-top: 0.5rem !important;
+  }
+  .p-6, .p-8, .sm\:p-12, .sm\:p-8, .sm\:p-10 {
+    padding: 1rem !important;
+  }
+
+  /* Prevent awkward page cuts through individual cards and list rows */
   article,
   .rounded-2xl,
   .rounded-3xl,
   .rounded-xl,
   .grid > div,
-  .space-y-4 > div,
-  .space-y-6 > div,
   li,
   tr {
     break-inside: avoid !important;
@@ -163,4 +181,5 @@
     color-adjust: exact !important;
   }
 }
+
 
