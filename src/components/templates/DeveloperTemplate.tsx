@@ -36,7 +36,7 @@ export const DeveloperTemplate: React.FC<TemplateProps> = ({ portfolio, isCompac
   };
 
   return (
-    <div className={`w-full bg-[#050811] text-slate-100 font-mono selection:bg-cyan-500 selection:text-black transition-all ${isCompact ? 'p-3 text-xs' : 'p-6 sm:p-12 max-w-5xl mx-auto'}`}>
+    <div className={`w-full bg-[#050811] text-slate-100 font-mono selection:bg-cyan-500 selection:text-black transition-all ${isCompact ? 'p-3 text-xs' : 'p-6 sm:p-12 max-w-5xl mx-auto print:max-w-none print:p-4 print:m-0'}`}>
       
       {/* Top Cyber Terminal Window Header */}
       <div className="rounded-2xl border border-cyan-500/30 bg-[#090d1a] shadow-[0_0_50px_-15px_rgba(6,182,212,0.25)] overflow-hidden mb-8">
