@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix tech humans",
+  "description": "Transform your traditional PDF resume into a modern online portfolio or build one from scratch with our step-by-step form wizard and live preview.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
