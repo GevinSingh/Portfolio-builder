@@ -90,22 +90,34 @@
 
 /* Print / PDF Export Styles */
 @media print {
+  @page {
+    margin: 10mm;
+    size: auto;
+  }
+
+  /* Completely hide non-printable chrome and interactive elements */
   .no-print,
   nav,
   header,
-  .sticky,
+  footer,
+  aside,
   button,
-  #public-share-btn,
+  input,
+  form,
+  .sticky,
+  .fixed,
   #toast-container,
-  footer {
+  [role="alert"],
+  #public-share-btn {
     display: none !important;
   }
 
-  body, html {
-    background: #ffffff !important;
-    color: #000000 !important;
-    padding: 0 !important;
+  /* Preserve full color fidelity and remove browser print distortion */
+  html, body {
     margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    background: transparent !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
@@ -113,9 +125,26 @@
   main {
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
   }
 
-  /* Ensure card backgrounds and borders print crisp */
+  /* Prevent awkward page cuts through cards, headings, and lists */
+  section,
+  article,
+  .rounded-2xl,
+  .rounded-3xl,
+  .rounded-xl,
+  .grid > div,
+  .space-y-4 > div,
+  .space-y-6 > div,
+  li,
+  tr {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Ensure cards, badges, gradients print accurately */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

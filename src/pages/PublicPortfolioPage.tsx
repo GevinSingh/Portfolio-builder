@@ -87,11 +87,7 @@ export const PublicPortfolioPage: React.FC = () => {
   }, []);
 
   const handleDownloadPortfolio = () => {
-    triggerConfetti();
-    showToast('Downloading Portfolio PDF', `Preparing printable PDF for ${portfolio.profile.fullName}...`, 'info');
-    setTimeout(() => {
-      window.print();
-    }, 300);
+    window.print();
   };
 
   return (
@@ -182,8 +178,8 @@ export const PublicPortfolioPage: React.FC = () => {
       <main className="flex-1 py-8 sm:py-16">
         <PortfolioRenderer portfolio={portfolio} isCompact={false} />
 
-        {/* Global Contact Section for Public Visitors */}
-        <section className="max-w-4xl mx-auto px-6 mt-16 pt-12 border-t border-slate-200">
+        {/* Global Contact Section for Public Visitors (Hidden in PDF export) */}
+        <section className="no-print max-w-4xl mx-auto px-6 mt-16 pt-12 border-t border-slate-200">
           <div className="p-8 sm:p-12 rounded-3xl bg-white border border-slate-200 shadow-xl relative overflow-hidden">
             
             <div className="absolute top-0 right-0 w-64 h-64 bg-blue-100/50 rounded-full blur-3xl pointer-events-none" />
