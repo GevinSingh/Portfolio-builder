@@ -41,7 +41,7 @@ export const EditorialTemplate: React.FC<TemplateProps> = ({ portfolio, isCompac
           <span>CURATED CAREER RETROSPECTIVE</span>
         </div>
         <div className="text-[#1E293B] font-bold">
-          <span>TECH HUMANS ARCHIVE • VOL. 06</span>
+          <span>PORTFOLIO ARCHIVE • VOL. 06</span>
         </div>
       </div>
 

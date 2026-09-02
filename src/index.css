@@ -91,7 +91,7 @@
 /* Print / PDF Export Styles */
 @media print {
   @page {
-    margin: 10mm;
+    margin: 0 !important;
     size: auto;
   }
 
@@ -112,21 +112,33 @@
     display: none !important;
   }
 
-  /* Preserve full color fidelity and remove browser print distortion */
+  /* Zero out root margins and ensure 100% full bleed color reproduction */
   html, body {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
-    background: transparent !important;
+    min-height: 100% !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Remove all outer page margins/paddings on print */
+  .min-h-screen {
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 100% !important;
+    min-height: 100% !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
   main {
-    padding: 0 !important;
+    padding: 12mm 14mm !important;
     margin: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    box-sizing: border-box !important;
   }
 
   /* Prevent awkward page cuts through cards, headings, and lists */
@@ -148,5 +160,7 @@
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+    color-adjust: exact !important;
   }
 }
+
