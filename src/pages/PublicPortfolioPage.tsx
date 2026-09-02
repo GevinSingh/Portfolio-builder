@@ -90,26 +90,49 @@ export const PublicPortfolioPage: React.FC = () => {
     window.print();
   };
 
+  const pageThemeClass = (() => {
+    switch (portfolio.templateId) {
+      case 'developer':
+        return 'bg-[#050811] text-slate-100';
+      case 'noir':
+        return 'bg-[#111111] text-white';
+      case 'creative':
+        return 'bg-[#0b0f19] text-slate-100';
+      case 'architect':
+        return 'bg-[#0f1117] text-slate-100';
+      case 'editorial':
+        return 'bg-[#FAF9F5] text-slate-900';
+      case 'bento':
+        return 'bg-[#F8FAFC] text-slate-900';
+      case 'minimal':
+        return 'bg-[#FFFFFF] text-slate-900';
+      case 'corporate':
+        return 'bg-[#F8FAFC] text-slate-900';
+      default:
+        return 'bg-[#F8FAFC] text-slate-700';
+    }
+  })();
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-slate-700 font-['Inter',sans-serif] flex flex-col relative selection:bg-[#1E65FF] selection:text-white">
+    <div className={`min-h-screen ${pageThemeClass} font-['Inter',sans-serif] flex flex-col relative selection:bg-[#1E65FF] selection:text-white transition-colors`}>
       
       {/* Floating Top Showcase Banner */}
-      <div className="no-print sticky top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-sm">
+      <div className="no-print sticky top-0 z-50 w-full border-b border-slate-200/20 bg-slate-900/80 backdrop-blur-xl px-4 py-2.5 flex items-center justify-between text-xs shadow-sm text-slate-200">
         <div className="flex items-center gap-3">
           <Link
             to="/dashboard"
-            className="flex items-center gap-1.5 text-slate-600 hover:text-slate-900 font-bold uppercase tracking-wider text-[11px]"
+            className="flex items-center gap-1.5 text-slate-300 hover:text-white font-bold uppercase tracking-wider text-[11px]"
           >
             <ArrowLeft className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Back to Dashboard</span>
           </Link>
 
-          <div className="h-4 w-px bg-slate-200 hidden sm:block" />
+          <div className="h-4 w-px bg-slate-700 hidden sm:block" />
 
-          <div className="flex items-center gap-1.5 font-mono text-slate-700">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="font-bold text-slate-900">{portfolio.profile.fullName}</span>
-            <span className="text-slate-500 hidden md:inline">• Tech Humans Verified Showcase</span>
+          <div className="flex items-center gap-1.5 font-mono text-slate-300">
+            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="font-bold text-white">{portfolio.profile.fullName}</span>
+            <span className="text-slate-400 hidden md:inline">• Tech Humans Verified Showcase</span>
           </div>
         </div>
 
@@ -119,14 +142,14 @@ export const PublicPortfolioPage: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setShowThemePicker(!showThemePicker)}
-              className="px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:border-[#1E65FF]/50 text-slate-700 hover:text-slate-900 text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all"
+              className="px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:border-cyan-400/50 text-slate-200 hover:text-white text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 transition-all cursor-pointer"
             >
-              <Palette className="w-3.5 h-3.5 text-[#1E65FF]" />
+              <Palette className="w-3.5 h-3.5 text-cyan-400" />
               <span className="capitalize">{portfolio.templateId}</span>
             </button>
 
             {showThemePicker && (
-              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-white border border-slate-200 p-1.5 shadow-xl z-50 space-y-1">
+              <div className="absolute right-0 top-full mt-2 w-48 rounded-xl bg-slate-900 border border-slate-700 p-1.5 shadow-xl z-50 space-y-1">
                 {templateOptions.map((t) => (
                   <button
                     key={t.id}
@@ -134,8 +157,8 @@ export const PublicPortfolioPage: React.FC = () => {
                       setTemplateId(t.id as TemplateId);
                       setShowThemePicker(false);
                     }}
-                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-between ${
-                      portfolio.templateId === t.id ? 'bg-[#1E65FF] text-white' : 'text-slate-700 hover:bg-slate-100'
+                    className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center justify-between cursor-pointer ${
+                      portfolio.templateId === t.id ? 'bg-[#1E65FF] text-white' : 'text-slate-300 hover:bg-slate-800'
                     }`}
                   >
                     <span>{t.name}</span>
@@ -148,16 +171,16 @@ export const PublicPortfolioPage: React.FC = () => {
 
           <button
             onClick={handleDownloadPortfolio}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-bold uppercase tracking-wider text-[11px] transition-colors cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 hover:text-white font-bold uppercase tracking-wider text-[11px] transition-colors cursor-pointer"
             title="Download Portfolio as PDF"
           >
-            <Download className="w-3.5 h-3.5" />
+            <Download className="w-3.5 h-3.5 text-cyan-400" />
             <span>Portfolio PDF</span>
           </button>
 
           <Link
             to="/editor"
-            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 hover:bg-slate-100 text-slate-700 hover:text-slate-900 font-bold uppercase tracking-wider text-[11px] transition-colors"
+            className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 border border-slate-700 hover:bg-slate-700 text-slate-200 hover:text-white font-bold uppercase tracking-wider text-[11px] transition-colors"
           >
             <Edit3 className="w-3.5 h-3.5" />
             <span>Edit</span>
@@ -166,7 +189,7 @@ export const PublicPortfolioPage: React.FC = () => {
           <button
             onClick={handleShare}
             id="public-share-btn"
-            className="px-3.5 py-1.5 rounded-lg bg-[#1E65FF] hover:bg-[#1853db] text-white font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 shadow-md shadow-[#1E65FF]/20 transition-all active:scale-95"
+            className="px-3.5 py-1.5 rounded-lg bg-[#1E65FF] hover:bg-[#1853db] text-white font-bold uppercase tracking-wider text-[11px] flex items-center gap-1.5 shadow-md shadow-[#1E65FF]/20 transition-all active:scale-95 cursor-pointer"
           >
             {copied ? <Check className="w-3.5 h-3.5" /> : <Share2 className="w-3.5 h-3.5" />}
             <span>{copied ? 'Copied!' : 'Share Portfolio ↗'}</span>
@@ -175,7 +198,7 @@ export const PublicPortfolioPage: React.FC = () => {
       </div>
 
       {/* Main Public Portfolio Body - Rendered with active style */}
-      <main className="flex-1 py-8 sm:py-16">
+      <main className="flex-1 py-4 sm:py-8 print:p-0 print:m-0">
         <PortfolioRenderer portfolio={portfolio} isCompact={false} />
 
         {/* Global Contact Section for Public Visitors (Hidden in PDF export) */}
