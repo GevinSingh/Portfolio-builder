@@ -30,8 +30,11 @@ export interface EducationItem {
   institution: string;
   degree: string;
   field: string;
-  startDate: string;
-  endDate: string;
+  startDate?: string;
+  endDate?: string;
+  startYear?: string;
+  endYear?: string;
+  location?: string;
   gpa?: string;
   honors?: string;
 }
@@ -46,7 +49,8 @@ export interface AchievementItem {
   id: string;
   title: string;
   issuer: string;
-  date: string;
+  date?: string;
+  year?: string;
   description: string;
 }
 
@@ -82,6 +86,7 @@ export interface ProfileData {
   headline: string;
   bio: string;
   avatarUrl: string;
+  slug?: string;
   bannerUrl?: string;
   statusText?: string;
   socials: SocialLinks;

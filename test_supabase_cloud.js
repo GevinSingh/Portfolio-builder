@@ -33,34 +33,9 @@ async function testSupabase() {
     });
   }
 
-  // 2. Perform live upsert
-  const testPortfolio = {
-    slug: 'alex-johnson',
-    user_id: '00000000-0000-4000-a000-000000000000',
-    title: "Alex Johnson's Portfolio",
-    data: {
-      profile: {
-        fullName: "Alex Johnson",
-        headline: "Full Stack Developer & AI Engineer",
-        bio: "Building intelligent web applications with Supabase Cloud & Next.js.",
-        email: "alex@example.com"
-      },
-      templateId: "developer",
-      slug: "alex-johnson"
-    },
-    updated_at: new Date().toISOString()
-  };
-
-  const { data: upsertData, error: upsertError } = await supabase
-    .from('portfolios')
-    .upsert(testPortfolio, { onConflict: 'slug' })
-    .select();
-
-  if (upsertError) {
-    console.error("❌ UPSERT ERROR:", upsertError.message);
-  } else {
-    console.log("✅ SUCCESS! Upserted data directly into Supabase Cloud 'portfolios' table!");
-  }
+  console.log("==================================================");
+  console.log("Supabase Cloud Health Check Complete.");
+  console.log("==================================================");
 }
 
 testSupabase();

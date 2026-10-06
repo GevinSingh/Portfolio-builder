@@ -82,7 +82,7 @@ export const portfolioApi = {
     try {
       const res = await fetch(`${API_BASE}/portfolios`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           slug: portfolio.slug || 'my-portfolio',
           title: `${portfolio.profile.fullName}'s Portfolio`,
@@ -202,7 +202,7 @@ export const uploadApi = {
 
       const res = await fetch(`${API_BASE}/upload/resume`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           fileName: file.name,
           base64Data,
@@ -233,7 +233,7 @@ export const uploadApi = {
 
       const res = await fetch(`${API_BASE}/parse/resume`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({
           fileName: file.name,
           base64Data,

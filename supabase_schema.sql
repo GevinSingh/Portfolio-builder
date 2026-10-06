@@ -160,11 +160,23 @@ DROP POLICY IF EXISTS "Owners can upload resume and avatar files" ON storage.obj
 DROP POLICY IF EXISTS "Owners can update own resume and avatar files" ON storage.objects;
 DROP POLICY IF EXISTS "Owners can delete own resume and avatar files" ON storage.objects;
 
--- SECURE: Anyone can read/download files (they are public CDN assets)
-CREATE POLICY "Public can read resume and avatar files"
+DROP POLICY IF EXISTS "Public can read avatar files" ON storage.objects;
+DROP POLICY IF EXISTS "Owners can read own resume files" ON storage.objects;
+
+-- SECURE: Anyone can read/download avatar files (public CDN assets)
+CREATE POLICY "Public can read avatar files"
   ON storage.objects FOR SELECT
   TO anon, authenticated
-  USING (bucket_id IN ('resumes', 'avatars'));
+  USING (bucket_id = 'avatars');
+
+-- SECURE: Authenticated users can only read/download their own resume files
+CREATE POLICY "Owners can read own resume files"
+  ON storage.objects FOR SELECT
+  TO authenticated
+  USING (
+    bucket_id = 'resumes'
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 -- SECURE: Authenticated users can only upload to their own user-scoped folder
 CREATE POLICY "Owners can upload resume and avatar files"

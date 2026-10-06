@@ -38,7 +38,7 @@ interface ToastInfo {
   id: string;
   title: string;
   message: string;
-  type?: 'success' | 'info' | 'warning' | 'sparkles';
+  type?: 'success' | 'info' | 'warning' | 'sparkles' | 'error';
 }
 
 interface PortfolioContextType {
@@ -675,7 +675,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const loadSampleResume = (sampleId: string) => {
     const found = sampleResumes.find((s) => s.id === sampleId);
     if (found) {
-      setPortfolio(found.data);
+      setPortfolio(found.data as PortfolioData);
       triggerConfetti();
       showToast('Sample Resume Loaded', `Imported ${found.name}'s professional profile.`);
     }

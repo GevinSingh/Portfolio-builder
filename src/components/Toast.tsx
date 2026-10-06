@@ -22,6 +22,7 @@ export const ToastContainer: React.FC = () => {
               {toast.type === 'sparkles' && <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />}
               {toast.type === 'info' && <Info className="w-5 h-5 text-cyan-400" />}
               {toast.type === 'warning' && <AlertTriangle className="w-5 h-5 text-amber-400" />}
+              {toast.type === 'error' && <AlertTriangle className="w-5 h-5 text-rose-500" />}
               {(!toast.type || toast.type === 'success') && <CheckCircle2 className="w-5 h-5 text-emerald-400" />}
             </div>
             <div className="flex-1 min-w-0">
