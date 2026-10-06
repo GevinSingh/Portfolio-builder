@@ -9,7 +9,11 @@ import jwt from 'jsonwebtoken';
 
 dotenv.config();
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-long-random-secret-in-production-min-32-chars';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) {
+  console.error('FATAL: JWT_SECRET environment variable is not set. Set it in your .env file.');
+  process.exit(1);
+}
 const JWT_EXPIRES_IN = '7d';
 
 // ---------------------------------------------------------------
@@ -259,8 +263,11 @@ app.get('/api/portfolios/user/:userId', (req, res) => {
   res.json({ success: true, data: userPortfolios[0].data });
 });
 
-app.post('/api/portfolios', (req, res) => {
-  const { slug, title, data, userId } = req.body;
+app.post('/api/portfolios', requireAuth, (req, res) => {
+  const { slug, title, data } = req.body;
+  // userId is ALWAYS sourced from the verified JWT — never from the client body
+  const userId = req.user.id;
+
   if (!slug || !data) {
     return res.status(400).json({ error: 'Slug and portfolio data are required' });
   }
@@ -268,11 +275,16 @@ app.post('/api/portfolios', (req, res) => {
   const portfolios = readJson(PORTFOLIOS_FILE, []);
   const index = portfolios.findIndex((p) => p.slug === slug);
 
+  // Ownership check on update: prevent overwriting another user's portfolio
+  if (index >= 0 && portfolios[index].userId && portfolios[index].userId !== userId) {
+    return res.status(403).json({ error: 'You do not have permission to update this portfolio' });
+  }
+
   const payload = {
     id: index >= 0 ? portfolios[index].id : 'port_' + Date.now(),
     slug: slug.trim(),
     title: title || `${data.profile?.fullName || 'User'}'s Portfolio`,
-    userId: userId || (index >= 0 ? portfolios[index].userId : 'guest'),
+    userId,
     data: data,
     viewsCount: index >= 0 ? (portfolios[index].viewsCount || 0) : 0,
     updatedAt: new Date().toISOString(),

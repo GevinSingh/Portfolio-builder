@@ -1,10 +1,9 @@
 -- ==============================================================================
 -- Tech Humans Portfolio - Master Supabase Database Schema & Storage Setup
--- Project URL: https://glhowtmwkgzylfoglwhy.supabase.co
 --
 -- INSTRUCTIONS:
--- 1. Open your Supabase Dashboard: https://supabase.com/dashboard/project/glhowtmwkgzylfoglwhy
--- 2. Click "SQL Editor" in the left sidebar
+-- 1. Open your Supabase Dashboard: https://supabase.com/dashboard
+-- 2. Select your project, then click "SQL Editor" in the left sidebar
 -- 3. Click "+ New query", paste this entire script, and click "Run" (Ctrl+Enter / Cmd+Enter)
 -- ==============================================================================
 
