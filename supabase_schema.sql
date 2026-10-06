@@ -138,10 +138,11 @@ CREATE POLICY "Owners can delete their contact messages"
 -- ==============================================================================
 -- 3. STORAGE BUCKETS & POLICIES (Resumes & Avatars)
 -- ==============================================================================
--- Ensure buckets exist and are public
+-- resumes bucket is PRIVATE — personal data (phone, email, address) should not be publicly downloadable
+-- Access resumes via Supabase signed URLs (supabase.storage.from('resumes').createSignedUrl(...))
 INSERT INTO storage.buckets (id, name, public)
-VALUES ('resumes', 'resumes', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+VALUES ('resumes', 'resumes', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
 
 INSERT INTO storage.buckets (id, name, public)
 VALUES ('avatars', 'avatars', true)

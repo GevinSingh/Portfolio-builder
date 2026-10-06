@@ -308,8 +308,8 @@ app.delete('/api/portfolios/:slug', requireAuth, (req, res) => {
   if (!record) {
     return res.status(404).json({ error: 'Portfolio not found' });
   }
-  // Ownership check — only the portfolio owner can delete it
-  if (record.userId && record.userId !== req.user.id && record.userId !== 'guest') {
+  // Strict ownership check — only the exact owner can delete
+  if (record.userId !== req.user.id) {
     return res.status(403).json({ error: 'You do not have permission to delete this portfolio' });
   }
   portfolios = portfolios.filter((p) => p.slug !== slug);
@@ -343,26 +343,51 @@ app.post('/api/messages', (req, res) => {
   res.status(201).json({ success: true, message: newMsg });
 });
 
-// Only authenticated users can read messages
+// Only the portfolio owner can read all messages
 app.get('/api/messages', requireAuth, (req, res) => {
+  const portfolios = readJson(PORTFOLIOS_FILE, []);
+  const ownedSlugs = new Set(
+    portfolios.filter((p) => p.userId === req.user.id).map((p) => p.slug)
+  );
   const messages = readJson(MESSAGES_FILE, []);
-  res.json({ success: true, messages });
-});
-
-// Only authenticated users can read messages for a specific portfolio
-app.get('/api/messages/:portfolioSlug', requireAuth, (req, res) => {
-  const { portfolioSlug } = req.params;
-  const messages = readJson(MESSAGES_FILE, []);
-  const filtered = messages.filter((m) => m.portfolioSlug === portfolioSlug || m.portfolioSlug === 'default');
+  // Only return messages for portfolios the user owns
+  const filtered = messages.filter((m) => ownedSlugs.has(m.portfolioSlug));
   res.json({ success: true, messages: filtered });
 });
 
-// Only authenticated users can delete messages
+// Only the portfolio owner can read messages for their portfolio
+app.get('/api/messages/:portfolioSlug', requireAuth, (req, res) => {
+  const { portfolioSlug } = req.params;
+  const portfolios = readJson(PORTFOLIOS_FILE, []);
+  const ownsPortfolio = portfolios.some(
+    (p) => p.slug === portfolioSlug && p.userId === req.user.id
+  );
+  if (!ownsPortfolio) {
+    return res.status(403).json({ error: 'You do not have permission to view these messages' });
+  }
+  const messages = readJson(MESSAGES_FILE, []);
+  const filtered = messages.filter((m) => m.portfolioSlug === portfolioSlug);
+  res.json({ success: true, messages: filtered });
+});
+
+// Only the portfolio owner can delete a message
 app.delete('/api/messages/:id', requireAuth, (req, res) => {
   const { id } = req.params;
-  let messages = readJson(MESSAGES_FILE, []);
-  messages = messages.filter((m) => m.id !== id);
-  writeJson(MESSAGES_FILE, messages);
+  const messages = readJson(MESSAGES_FILE, []);
+  const target = messages.find((m) => m.id === id);
+  if (!target) {
+    return res.status(404).json({ error: 'Message not found' });
+  }
+  // Verify the user owns the portfolio the message belongs to
+  const portfolios = readJson(PORTFOLIOS_FILE, []);
+  const ownsPortfolio = portfolios.some(
+    (p) => p.slug === target.portfolioSlug && p.userId === req.user.id
+  );
+  if (!ownsPortfolio) {
+    return res.status(403).json({ error: 'You do not have permission to delete this message' });
+  }
+  const remaining = messages.filter((m) => m.id !== id);
+  writeJson(MESSAGES_FILE, remaining);
   res.json({ success: true });
 });
 
