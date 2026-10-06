@@ -210,7 +210,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     fetchUserPortfolio(currentUser?.id).then((res) => {
       if (res.success && res.data) {
-        setPortfolio(res.data);
+        setPortfolio(sanitizePortfolioData(res.data));
       }
     }).catch(() => {});
   }, [currentUser?.id]);
@@ -320,7 +320,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
 
       if (cloudRes.success && cloudRes.data) {
-        setPortfolio(cloudRes.data);
+        setPortfolio(sanitizePortfolioData(cloudRes.data));
         showToast('Restored from Supabase Cloud', 'Loaded portfolio data from Supabase cloud.', 'sparkles');
         triggerConfetti();
         return true;
@@ -329,7 +329,7 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // 2. Fallback to Express server
       const serverRes = await portfolioApi.getBySlug(slug);
       if (serverRes.success && serverRes.data) {
-        setPortfolio(serverRes.data);
+        setPortfolio(sanitizePortfolioData(serverRes.data));
         showToast('Portfolio Restored', 'Loaded portfolio data from server.', 'sparkles');
         triggerConfetti();
         return true;
@@ -443,14 +443,14 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Dynamic portfolio score calculation
   const portfolioScore = React.useMemo(() => {
     let score = 75;
-    if (portfolio.profile.bio.length > 50) score += 3;
-    if (portfolio.projects.length >= 3) score += 5;
-    if (portfolio.skills.length >= 3) score += 3;
-    if (portfolio.experience.length >= 2) score += 4;
+    if (portfolio?.profile?.bio && portfolio.profile.bio.length > 50) score += 3;
+    if (portfolio?.projects && portfolio.projects.length >= 3) score += 5;
+    if (portfolio?.skills && portfolio.skills.length >= 3) score += 3;
+    if (portfolio?.experience && portfolio.experience.length >= 2) score += 4;
     // Boost from applied suggestions
-    const appliedBoost = coachSuggestions
-      .filter((s) => s.applied)
-      .reduce((sum, s) => sum + s.impactScore, 0);
+    const appliedBoost = (coachSuggestions || [])
+      .filter((s) => s?.applied)
+      .reduce((sum, s) => sum + (s?.impactScore || 0), 0);
     return Math.min(100, score + appliedBoost);
   }, [portfolio, coachSuggestions]);
 

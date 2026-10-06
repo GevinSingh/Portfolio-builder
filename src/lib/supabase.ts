@@ -45,6 +45,9 @@ export async function signUpWithEmail(email: string, password: string, fullName?
     }
     return data;
   } catch (err: any) {
+    if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+      throw new Error('Unable to connect to Supabase Cloud server. Please check your internet connection or verify VITE_SUPABASE_URL in .env');
+    }
     throw err;
   }
 }
@@ -74,6 +77,9 @@ export async function signInWithEmail(email: string, password: string) {
     }
     return data;
   } catch (err: any) {
+    if (err.message?.includes('Failed to fetch') || err.name === 'TypeError') {
+      throw new Error('Unable to connect to Supabase Cloud server. Please check your internet connection or verify VITE_SUPABASE_URL in .env');
+    }
     throw err;
   }
 }

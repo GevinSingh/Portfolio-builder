@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, AlertCircle, Sparkles, Eye, EyeOff } from 'lucide-react';
-import { supabase } from '../supabaseClient.js';
+import { usePortfolio } from '../context/PortfolioContext';
 
 export const SignInPage: React.FC = () => {
   const navigate = useNavigate();
+  const { signInWithSupabase, showToast, triggerConfetti } = usePortfolio();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -17,22 +18,23 @@ export const SignInPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (authError) {
-        if (authError.message.includes('captcha') || authError.message.includes('captcha_token')) {
-          setError('Captcha protection is enabled on your Supabase project. Please go to your Supabase Dashboard -> Authentication -> Security -> disable "Enable CAPTCHA protection".');
-        } else {
-          setError(authError.message);
-        }
-      } else if (data.session || data.user) {
+      const result = await signInWithSupabase(email, password);
+      if (result && result.user) {
+        showToast('Welcome Back!', `Logged in as ${result.user.email}`, 'sparkles');
+        triggerConfetti();
         navigate('/');
+      } else {
+        setError('Invalid email or password.');
       }
     } catch (err: any) {
-      setError(err.message || 'An unexpected error occurred during sign in.');
+      const msg = err?.message || '';
+      if (msg.includes('captcha') || msg.includes('captcha_token')) {
+        setError('Captcha protection is enabled on your Supabase project. Go to Supabase Dashboard -> Authentication -> Security -> disable "Enable CAPTCHA protection".');
+      } else if (msg.includes('Failed to fetch') || msg.includes('network') || err?.name === 'TypeError') {
+        setError('Could not connect to Supabase Cloud server. Please check your network or VITE_SUPABASE_URL setting in .env.');
+      } else {
+        setError(msg || 'An unexpected error occurred during sign in.');
+      }
     } finally {
       setLoading(false);
     }

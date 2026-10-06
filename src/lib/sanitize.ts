@@ -98,56 +98,58 @@ export function formatExternalUrl(url?: string, defaultDomain?: 'github' | 'link
   return `https://${trimmed}`;
 }
 
-export function sanitizePortfolioData(data: PortfolioData): PortfolioData {
-  if (!data) return data;
+import { initialPortfolioData } from '../data/mockData';
 
-  const rawCandidates = data.profile?.photo?.candidates || [];
-  const cleanedCandidates = rawCandidates.filter((c) => !c.id?.startsWith('canvas-photo-'));
-  const isLegacyCanvasPhoto = rawCandidates.some((c) => c.id?.startsWith('canvas-photo-') && c.url === data.profile?.avatarUrl);
+export function sanitizePortfolioData(data?: PortfolioData | any): PortfolioData {
+  const base = (data && typeof data === 'object') ? data : initialPortfolioData;
+  const rawProfile = base.profile || initialPortfolioData.profile || {};
+
+  const rawCandidates = rawProfile?.photo?.candidates || [];
+  const cleanedCandidates = Array.isArray(rawCandidates) 
+    ? rawCandidates.filter((c: any) => !c?.id?.startsWith('canvas-photo-')) 
+    : [];
+  const isLegacyCanvasPhoto = Array.isArray(rawCandidates) && rawCandidates.some((c: any) => c?.id?.startsWith('canvas-photo-') && c?.url === rawProfile?.avatarUrl);
   const activeAvatar = isLegacyCanvasPhoto
     ? (cleanedCandidates[0]?.url || '')
-    : (data.profile?.avatarUrl || '');
+    : (rawProfile?.avatarUrl || '');
 
   const profile = {
-    ...data.profile,
-    fullName: cleanText(data.profile?.fullName) || 'Candidate Name',
-    headline: cleanText(data.profile?.headline) || 'Software Professional',
-    bio: cleanText(data.profile?.bio) || '',
-    avatarUrl: activeAvatar,
-    photo: data.profile?.photo ? {
-      ...data.profile.photo,
+    fullName: cleanText(rawProfile?.fullName) || initialPortfolioData.profile.fullName,
+    headline: cleanText(rawProfile?.headline) || initialPortfolioData.profile.headline,
+    bio: cleanText(rawProfile?.bio) || initialPortfolioData.profile.bio,
+    avatarUrl: activeAvatar || initialPortfolioData.profile.avatarUrl,
+    bannerUrl: rawProfile?.bannerUrl || initialPortfolioData.profile.bannerUrl,
+    statusText: rawProfile?.statusText || '',
+    photo: rawProfile?.photo ? {
+      ...rawProfile.photo,
       url: activeAvatar,
       candidates: cleanedCandidates,
       selected: Boolean(activeAvatar),
       source: (activeAvatar ? 'resume' : 'none') as 'resume' | 'none' | 'manual',
     } : undefined,
     socials: {
-      github: formatExternalUrl(data.profile?.socials?.github, 'github'),
-      linkedin: formatExternalUrl(data.profile?.socials?.linkedin, 'linkedin'),
-      twitter: formatExternalUrl(data.profile?.socials?.twitter, 'twitter'),
-      website: formatExternalUrl(data.profile?.socials?.website, 'website'),
-      email: cleanText(data.profile?.socials?.email) || '',
-      phone: cleanText(data.profile?.socials?.phone) || '',
-      location: cleanText(data.profile?.socials?.location) || '',
+      github: formatExternalUrl(rawProfile?.socials?.github, 'github'),
+      linkedin: formatExternalUrl(rawProfile?.socials?.linkedin, 'linkedin'),
+      twitter: formatExternalUrl(rawProfile?.socials?.twitter, 'twitter'),
+      website: formatExternalUrl(rawProfile?.socials?.website, 'website'),
+      email: cleanText(rawProfile?.socials?.email) || '',
+      phone: cleanText(rawProfile?.socials?.phone) || '',
+      location: cleanText(rawProfile?.socials?.location) || '',
     },
   };
 
-  const about = data.about ? {
-    ...data.about,
-    summary: cleanText(data.about.summary) || '',
-    highlights: Array.isArray(data.about.highlights)
-      ? data.about.highlights.map(cleanText).filter(isReadableText)
-      : [],
-    yearsOfExperience: data.about.yearsOfExperience || 0,
-  } : {
-    summary: '',
-    highlights: [],
-    yearsOfExperience: 0,
+  const rawAbout = base.about || initialPortfolioData.about || {};
+  const about = {
+    summary: cleanText(rawAbout?.summary) || initialPortfolioData.about.summary,
+    highlights: Array.isArray(rawAbout?.highlights)
+      ? rawAbout.highlights.map(cleanText).filter(isReadableText)
+      : initialPortfolioData.about.highlights,
+    yearsOfExperience: rawAbout?.yearsOfExperience || initialPortfolioData.about.yearsOfExperience || 0,
   };
 
-  const achievements: AchievementItem[] = (data.achievements || [])
-    .filter(ach => isReadableText(ach.title) && isReadableText(ach.description || ach.title))
-    .map(ach => ({
+  const achievements: AchievementItem[] = (Array.isArray(base.achievements) ? base.achievements : (initialPortfolioData.achievements || []))
+    .filter((ach: any) => isReadableText(ach?.title) && isReadableText(ach?.description || ach?.title))
+    .map((ach: any) => ({
       ...ach,
       title: cleanText(ach.title),
       description: cleanText(ach.description || ''),
@@ -155,9 +157,9 @@ export function sanitizePortfolioData(data: PortfolioData): PortfolioData {
       date: cleanText(ach.date || ''),
     }));
 
-  const experience: ExperienceItem[] = (data.experience || [])
-    .filter(exp => isReadableText(exp.role) && isReadableText(exp.company))
-    .map(exp => ({
+  const experience: ExperienceItem[] = (Array.isArray(base.experience) ? base.experience : (initialPortfolioData.experience || []))
+    .filter((exp: any) => isReadableText(exp?.role) && isReadableText(exp?.company))
+    .map((exp: any) => ({
       ...exp,
       role: cleanText(exp.role),
       company: cleanText(exp.company),
@@ -168,9 +170,9 @@ export function sanitizePortfolioData(data: PortfolioData): PortfolioData {
           : [],
     }));
 
-  const projects: ProjectItem[] = (data.projects || [])
-    .filter(proj => isReadableText(proj.title))
-    .map(proj => ({
+  const projects: ProjectItem[] = (Array.isArray(base.projects) ? base.projects : (initialPortfolioData.projects || []))
+    .filter((proj: any) => isReadableText(proj?.title))
+    .map((proj: any) => ({
       ...proj,
       title: cleanText(proj.title),
       description: cleanText(proj.description || ''),
@@ -181,9 +183,9 @@ export function sanitizePortfolioData(data: PortfolioData): PortfolioData {
         : [],
     }));
 
-  const education: EducationItem[] = (data.education || [])
-    .filter(edu => isReadableText(edu.institution) || isReadableText(edu.degree))
-    .map(edu => ({
+  const education: EducationItem[] = (Array.isArray(base.education) ? base.education : (initialPortfolioData.education || []))
+    .filter((edu: any) => isReadableText(edu?.institution) || isReadableText(edu?.degree))
+    .map((edu: any) => ({
       ...edu,
       institution: cleanText(edu.institution),
       degree: cleanText(edu.degree),
@@ -191,9 +193,9 @@ export function sanitizePortfolioData(data: PortfolioData): PortfolioData {
       gpa: cleanText(edu.gpa || ''),
     }));
 
-
   return {
-    ...data,
+    ...initialPortfolioData,
+    ...base,
     profile,
     about,
     projects,

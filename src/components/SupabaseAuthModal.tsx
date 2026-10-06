@@ -68,8 +68,7 @@ export const SupabaseAuthModal: React.FC<Props> = ({
         if (!email || !password) {
           throw new Error('Please provide both email and password.');
         }
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        await signUpWithSupabase(email, password, fullName);
         setSuccessMessage('Account created successfully!');
         triggerConfetti();
         setTimeout(() => {
@@ -79,8 +78,7 @@ export const SupabaseAuthModal: React.FC<Props> = ({
         if (!email || !password) {
           throw new Error('Please enter your email and password.');
         }
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        await signInWithSupabase(email, password);
         setSuccessMessage('Welcome back!');
         triggerConfetti();
         setTimeout(() => {
