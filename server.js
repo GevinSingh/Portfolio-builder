@@ -375,7 +375,7 @@ const AVATAR_ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
 const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;  // 5 MB
 
-app.post('/api/upload/resume', optionalAuth, (req, res) => {
+app.post('/api/upload/resume', requireAuth, (req, res) => {
   try {
     const { fileName, base64Data, userId } = req.body;
     if (!fileName || !base64Data) {
@@ -408,7 +408,7 @@ app.post('/api/upload/resume', optionalAuth, (req, res) => {
   }
 });
 
-app.post('/api/upload/avatar', optionalAuth, (req, res) => {
+app.post('/api/upload/avatar', requireAuth, (req, res) => {
   try {
     const { fileName, base64Data } = req.body;
     if (!fileName || !base64Data) {
@@ -444,11 +444,19 @@ app.post('/api/upload/avatar', optionalAuth, (req, res) => {
 // -------------------------------------------------------------
 // 5b. Document Text Extraction API (PDF, DOCX, TXT)
 // -------------------------------------------------------------
-app.post('/api/parse/resume', async (req, res) => {
+// Max base64 payload ~13.3 MB → decoded ≈ 10 MB
+const MAX_PARSE_BASE64_CHARS = 14 * 1024 * 1024;
+
+app.post('/api/parse/resume', requireAuth, async (req, res) => {
   try {
     const { fileName, base64Data } = req.body;
     if (!fileName || !base64Data) {
       return res.status(400).json({ error: 'fileName and base64Data are required' });
+    }
+
+    // Guard against oversized payloads before any CPU-heavy parsing
+    if (base64Data.length > MAX_PARSE_BASE64_CHARS) {
+      return res.status(413).json({ error: 'Document exceeds the 10 MB size limit' });
     }
 
     const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
