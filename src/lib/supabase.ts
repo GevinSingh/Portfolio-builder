@@ -2,10 +2,12 @@ import { SupabaseClient, User, Session } from '@supabase/supabase-js';
 import { supabase as clientInstance } from '../supabaseClient.js';
 import { PortfolioData } from '../types';
 
-export const supabaseUrl = "https://glhowtmwkgzylfoglwhy.supabase.co";
-export const supabaseAnonKey = "sb_publishable_yEAo5ZQIbFqNq6M3omLoBw_7b5hyrdS";
+// Keys are intentionally NOT hardcoded here — they are read from .env via supabaseClient.js
+export const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+export const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
-export const isSupabaseConfigured = (): boolean => true;
+export const isSupabaseConfigured = (): boolean =>
+  !!(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 export const supabase: SupabaseClient | any = clientInstance;
 

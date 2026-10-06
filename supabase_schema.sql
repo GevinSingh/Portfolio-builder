@@ -59,27 +59,30 @@ DROP POLICY IF EXISTS "Owners can insert portfolios" ON public.portfolios;
 DROP POLICY IF EXISTS "Owners can update portfolios" ON public.portfolios;
 DROP POLICY IF EXISTS "Owners can delete portfolios" ON public.portfolios;
 
--- Permissive, seamless policies for portfolios
+-- SECURE: Public can view all portfolios (read-only, no auth needed)
 CREATE POLICY "Public can view all portfolios"
   ON public.portfolios FOR SELECT
   TO anon, authenticated
   USING (true);
 
-CREATE POLICY "Anyone can create or upsert portfolios"
+-- SECURE: Only authenticated users can create their own portfolio
+CREATE POLICY "Owners can insert portfolios"
   ON public.portfolios FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (true);
+  TO authenticated
+  WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Anyone can update portfolios"
+-- SECURE: Only the portfolio owner can update their portfolio
+CREATE POLICY "Owners can update portfolios"
   ON public.portfolios FOR UPDATE
-  TO anon, authenticated
-  USING (true)
-  WITH CHECK (true);
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
-CREATE POLICY "Anyone can delete portfolios"
+-- SECURE: Only the portfolio owner can delete their portfolio
+CREATE POLICY "Owners can delete portfolios"
   ON public.portfolios FOR DELETE
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (auth.uid() = user_id);
 
 -- ==============================================================================
 -- 2. CONTACT MESSAGES TABLE
@@ -103,15 +106,35 @@ DROP POLICY IF EXISTS "Anyone can read messages" ON public.messages;
 DROP POLICY IF EXISTS "Anyone can insert contact messages" ON public.messages;
 DROP POLICY IF EXISTS "Owners can read their contact messages" ON public.messages;
 
+-- SECURE: Anyone (even anonymous visitors) can submit a contact form
 CREATE POLICY "Anyone can insert contact messages"
   ON public.messages FOR INSERT
   TO anon, authenticated
   WITH CHECK (true);
 
-CREATE POLICY "Anyone can read messages"
+-- SECURE: Only the portfolio owner can read messages sent to their portfolio
+CREATE POLICY "Owners can read their contact messages"
   ON public.messages FOR SELECT
-  TO anon, authenticated
-  USING (true);
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.portfolios
+      WHERE public.portfolios.slug = public.messages.portfolio_slug
+        AND public.portfolios.user_id = auth.uid()
+    )
+  );
+
+-- SECURE: Only the portfolio owner can delete messages
+CREATE POLICY "Owners can delete their contact messages"
+  ON public.messages FOR DELETE
+  TO authenticated
+  USING (
+    EXISTS (
+      SELECT 1 FROM public.portfolios
+      WHERE public.portfolios.slug = public.messages.portfolio_slug
+        AND public.portfolios.user_id = auth.uid()
+    )
+  );
 
 -- ==============================================================================
 -- 3. STORAGE BUCKETS & POLICIES (Resumes & Avatars)
@@ -137,29 +160,38 @@ DROP POLICY IF EXISTS "Owners can upload resume and avatar files" ON storage.obj
 DROP POLICY IF EXISTS "Owners can update own resume and avatar files" ON storage.objects;
 DROP POLICY IF EXISTS "Owners can delete own resume and avatar files" ON storage.objects;
 
--- Allow EVERYONE (public + app users) to read/download resumes and avatars
+-- SECURE: Anyone can read/download files (they are public CDN assets)
 CREATE POLICY "Public can read resume and avatar files"
   ON storage.objects FOR SELECT
   TO anon, authenticated
   USING (bucket_id IN ('resumes', 'avatars'));
 
--- Allow uploads into resumes and avatars buckets
-CREATE POLICY "Anyone can upload resume and avatar files"
+-- SECURE: Authenticated users can only upload to their own user-scoped folder
+CREATE POLICY "Owners can upload resume and avatar files"
   ON storage.objects FOR INSERT
-  TO anon, authenticated
-  WITH CHECK (bucket_id IN ('resumes', 'avatars'));
+  TO authenticated
+  WITH CHECK (
+    bucket_id IN ('resumes', 'avatars')
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
--- Allow update & replacement
-CREATE POLICY "Anyone can update resume and avatar files"
+-- SECURE: Authenticated users can only update their own files
+CREATE POLICY "Owners can update own resume and avatar files"
   ON storage.objects FOR UPDATE
-  TO anon, authenticated
-  USING (bucket_id IN ('resumes', 'avatars'));
+  TO authenticated
+  USING (
+    bucket_id IN ('resumes', 'avatars')
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
--- Allow file deletion
-CREATE POLICY "Anyone can delete resume and avatar files"
+-- SECURE: Authenticated users can only delete their own files
+CREATE POLICY "Owners can delete own resume and avatar files"
   ON storage.objects FOR DELETE
-  TO anon, authenticated
-  USING (bucket_id IN ('resumes', 'avatars'));
+  TO authenticated
+  USING (
+    bucket_id IN ('resumes', 'avatars')
+    AND (storage.foldername(name))[1] = auth.uid()::text
+  );
 
 -- ==============================================================================
 -- Schema Setup Complete! All tables, indexes, triggers & storage policies are ready.

@@ -28,6 +28,26 @@ export interface ServerHealth {
 const API_BASE = '/api';
 
 /**
+ * Retrieve the stored JWT token (set on login/register) for authenticated API calls.
+ * Falls back gracefully when not available so public routes are unaffected.
+ */
+function getAuthToken(): string | null {
+  try {
+    const raw = localStorage.getItem('portfoliox_server_token');
+    return raw || null;
+  } catch {
+    return null;
+  }
+}
+
+function authHeaders(extra: Record<string, string> = {}): Record<string, string> {
+  const token = getAuthToken();
+  const headers: Record<string, string> = { 'Content-Type': 'application/json', ...extra };
+  if (token) headers['Authorization'] = `Bearer ${token}`;
+  return headers;
+}
+
+/**
  * Health Diagnostic Check
  */
 export async function checkServerHealth(): Promise<ServerHealth> {
@@ -140,7 +160,7 @@ export const messageApi = {
   async getMessages(portfolioSlug?: string): Promise<ContactMessage[]> {
     try {
       const url = portfolioSlug ? `${API_BASE}/messages/${encodeURIComponent(portfolioSlug)}` : `${API_BASE}/messages`;
-      const res = await fetch(url);
+      const res = await fetch(url, { headers: authHeaders() });
       if (!res.ok) throw new Error('Failed to fetch messages');
       const json = await res.json();
       return json.messages || [];
@@ -154,6 +174,7 @@ export const messageApi = {
     try {
       const res = await fetch(`${API_BASE}/messages/${encodeURIComponent(id)}`, {
         method: 'DELETE',
+        headers: authHeaders(),
       });
       return res.ok;
     } catch {
@@ -240,7 +261,7 @@ export const uploadApi = {
  * Authentication API
  */
 export const authApi = {
-  async register(email: string, password: string, name?: string): Promise<{ success: boolean; user?: UserAccount; error?: string }> {
+  async register(email: string, password: string, name?: string): Promise<{ success: boolean; user?: UserAccount; token?: string; error?: string }> {
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
@@ -249,7 +270,11 @@ export const authApi = {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Registration failed');
-      return { success: true, user: json.user };
+      // Persist the JWT token for future authenticated calls
+      if (json.token) {
+        try { localStorage.setItem('portfoliox_server_token', json.token); } catch {}
+      }
+      return { success: true, user: json.user, token: json.token };
     } catch (err: any) {
       // Local fallback user
       const localUser: UserAccount = {
@@ -262,7 +287,7 @@ export const authApi = {
     }
   },
 
-  async login(email: string, password: string): Promise<{ success: boolean; user?: UserAccount; error?: string }> {
+  async login(email: string, password: string): Promise<{ success: boolean; user?: UserAccount; token?: string; error?: string }> {
     try {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: 'POST',
@@ -271,7 +296,11 @@ export const authApi = {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || 'Login failed');
-      return { success: true, user: json.user };
+      // Persist the JWT token for future authenticated calls
+      if (json.token) {
+        try { localStorage.setItem('portfoliox_server_token', json.token); } catch {}
+      }
+      return { success: true, user: json.user, token: json.token };
     } catch (err: any) {
       // Local fallback
       const localUser: UserAccount = {

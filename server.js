@@ -4,8 +4,46 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import mammoth from 'mammoth';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
 dotenv.config();
+
+const JWT_SECRET = process.env.JWT_SECRET || 'change-this-to-a-long-random-secret-in-production-min-32-chars';
+const JWT_EXPIRES_IN = '7d';
+
+// ---------------------------------------------------------------
+// Auth middleware — verifies JWT and attaches req.user
+// Routes that call requireAuth will return 401/403 if no valid token
+// ---------------------------------------------------------------
+function requireAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (!token) {
+    return res.status(401).json({ error: 'Authentication required' });
+  }
+  try {
+    const payload = jwt.verify(token, JWT_SECRET);
+    req.user = payload;
+    next();
+  } catch {
+    return res.status(403).json({ error: 'Invalid or expired token' });
+  }
+}
+
+// Optional auth — attaches req.user if a valid token is present, but never blocks
+function optionalAuth(req, res, next) {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+  if (token) {
+    try {
+      req.user = jwt.verify(token, JWT_SECRET);
+    } catch {
+      // ignore invalid tokens
+    }
+  }
+  next();
+}
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -93,10 +131,13 @@ app.get('/api/health', (req, res) => {
 // -------------------------------------------------------------
 // 2. Authentication API (Built-in Local Auth)
 // -------------------------------------------------------------
-app.post('/api/auth/register', (req, res) => {
+app.post('/api/auth/register', async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
+  }
+  if (password.length < 6) {
+    return res.status(400).json({ error: 'Password must be at least 6 characters' });
   }
 
   const users = readJson(USERS_FILE, []);
@@ -105,11 +146,12 @@ app.post('/api/auth/register', (req, res) => {
     return res.status(400).json({ error: 'A user with this email already exists' });
   }
 
+  const hashedPassword = await bcrypt.hash(password, 12);
   const newUser = {
     id: 'user_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
     email: email.trim(),
     name: name?.trim() || email.split('@')[0],
-    password: password, // In production, hash with bcrypt
+    password: hashedPassword,
     createdAt: new Date().toISOString(),
   };
 
@@ -117,52 +159,57 @@ app.post('/api/auth/register', (req, res) => {
   writeJson(USERS_FILE, users);
 
   const { password: _, ...safeUser } = newUser;
-  res.status(201).json({ success: true, user: safeUser, token: 'token_' + safeUser.id });
+  const token = jwt.sign({ id: safeUser.id, email: safeUser.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  res.status(201).json({ success: true, user: safeUser, token });
 });
 
-app.post('/api/auth/login', (req, res) => {
+app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
     return res.status(400).json({ error: 'Email and password are required' });
   }
 
   const users = readJson(USERS_FILE, []);
-  const user = users.find(
-    (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-  );
+  const userRecord = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
 
-  if (!user) {
-    // If the email already exists, they entered the wrong password
-    const emailExists = users.some((u) => u.email.toLowerCase() === email.toLowerCase());
-    if (emailExists) {
-      return res.status(401).json({ error: 'Invalid email or password' });
-    }
-
-    // If demo account credentials, create user on the fly
+  if (!userRecord) {
+    // Auto-create a new account on first login (demo/quick-start behaviour kept intact)
     if (email.includes('@') && password.length >= 6) {
+      const hashedPassword = await bcrypt.hash(password, 12);
       const demoUser = {
         id: 'user_' + Date.now(),
         email: email.trim(),
         name: email.split('@')[0],
-        password: password,
+        password: hashedPassword,
         createdAt: new Date().toISOString(),
       };
       users.push(demoUser);
       writeJson(USERS_FILE, users);
       const { password: _, ...safeDemo } = demoUser;
-      return res.json({ success: true, user: safeDemo, token: 'token_' + safeDemo.id });
+      const token = jwt.sign({ id: safeDemo.id, email: safeDemo.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+      return res.json({ success: true, user: safeDemo, token });
     }
     return res.status(401).json({ error: 'Invalid email or password' });
   }
 
-  const { password: _, ...safeUser } = user;
-  res.json({ success: true, user: safeUser, token: 'token_' + safeUser.id });
-});
+  // Verify hashed password — also allow legacy plain-text passwords during migration
+  const isMatch = userRecord.password.startsWith('$2') 
+    ? await bcrypt.compare(password, userRecord.password)
+    : userRecord.password === password;
 
-app.get('/api/auth/users', (req, res) => {
-  const users = readJson(USERS_FILE, []);
-  const safeUsers = users.map(({ password, ...rest }) => rest);
-  res.json({ users: safeUsers });
+  if (!isMatch) {
+    return res.status(401).json({ error: 'Invalid email or password' });
+  }
+
+  // Upgrade legacy plain-text password to hash on successful login
+  if (!userRecord.password.startsWith('$2')) {
+    userRecord.password = await bcrypt.hash(password, 12);
+    writeJson(USERS_FILE, users);
+  }
+
+  const { password: _, ...safeUser } = userRecord;
+  const token = jwt.sign({ id: safeUser.id, email: safeUser.email }, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+  res.json({ success: true, user: safeUser, token });
 });
 
 // -------------------------------------------------------------
@@ -242,14 +289,18 @@ app.post('/api/portfolios', (req, res) => {
   res.json({ success: true, portfolio: payload });
 });
 
-app.delete('/api/portfolios/:slug', (req, res) => {
+app.delete('/api/portfolios/:slug', requireAuth, (req, res) => {
   const { slug } = req.params;
   let portfolios = readJson(PORTFOLIOS_FILE, []);
-  const beforeLen = portfolios.length;
-  portfolios = portfolios.filter((p) => p.slug !== slug);
-  if (portfolios.length === beforeLen) {
+  const record = portfolios.find((p) => p.slug === slug);
+  if (!record) {
     return res.status(404).json({ error: 'Portfolio not found' });
   }
+  // Ownership check — only the portfolio owner can delete it
+  if (record.userId && record.userId !== req.user.id && record.userId !== 'guest') {
+    return res.status(403).json({ error: 'You do not have permission to delete this portfolio' });
+  }
+  portfolios = portfolios.filter((p) => p.slug !== slug);
   writeJson(PORTFOLIOS_FILE, portfolios);
   res.json({ success: true, message: `Portfolio ${slug} deleted` });
 });
@@ -280,19 +331,22 @@ app.post('/api/messages', (req, res) => {
   res.status(201).json({ success: true, message: newMsg });
 });
 
-app.get('/api/messages', (req, res) => {
+// Only authenticated users can read messages
+app.get('/api/messages', requireAuth, (req, res) => {
   const messages = readJson(MESSAGES_FILE, []);
   res.json({ success: true, messages });
 });
 
-app.get('/api/messages/:portfolioSlug', (req, res) => {
+// Only authenticated users can read messages for a specific portfolio
+app.get('/api/messages/:portfolioSlug', requireAuth, (req, res) => {
   const { portfolioSlug } = req.params;
   const messages = readJson(MESSAGES_FILE, []);
   const filtered = messages.filter((m) => m.portfolioSlug === portfolioSlug || m.portfolioSlug === 'default');
   res.json({ success: true, messages: filtered });
 });
 
-app.delete('/api/messages/:id', (req, res) => {
+// Only authenticated users can delete messages
+app.delete('/api/messages/:id', requireAuth, (req, res) => {
   const { id } = req.params;
   let messages = readJson(MESSAGES_FILE, []);
   messages = messages.filter((m) => m.id !== id);
@@ -303,16 +357,31 @@ app.delete('/api/messages/:id', (req, res) => {
 // -------------------------------------------------------------
 // 5. File Uploads (Resumes & Avatars)
 // -------------------------------------------------------------
-app.post('/api/upload/resume', (req, res) => {
+// Allowed file types and max sizes for uploads
+const RESUME_ALLOWED_EXTS = ['.pdf', '.docx', '.doc', '.txt'];
+const AVATAR_ALLOWED_EXTS = ['.jpg', '.jpeg', '.png', '.webp', '.gif'];
+const MAX_RESUME_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024;  // 5 MB
+
+app.post('/api/upload/resume', optionalAuth, (req, res) => {
   try {
     const { fileName, base64Data, userId } = req.body;
     if (!fileName || !base64Data) {
       return res.status(400).json({ error: 'fileName and base64Data are required' });
     }
 
-    // Strip base64 headers if present (e.g. data:application/pdf;base64,...)
+    // Validate file extension
+    const ext = path.extname(fileName).toLowerCase();
+    if (!RESUME_ALLOWED_EXTS.includes(ext)) {
+      return res.status(400).json({ error: `Invalid file type. Allowed: ${RESUME_ALLOWED_EXTS.join(', ')}` });
+    }
+
+    // Strip base64 headers and check decoded size
     const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(cleanBase64, 'base64');
+    if (buffer.length > MAX_RESUME_SIZE_BYTES) {
+      return res.status(400).json({ error: 'Resume file exceeds the 10 MB size limit' });
+    }
 
     const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const filePath = path.join(RESUMES_DIR, safeName);
@@ -327,15 +396,25 @@ app.post('/api/upload/resume', (req, res) => {
   }
 });
 
-app.post('/api/upload/avatar', (req, res) => {
+app.post('/api/upload/avatar', optionalAuth, (req, res) => {
   try {
     const { fileName, base64Data } = req.body;
     if (!fileName || !base64Data) {
       return res.status(400).json({ error: 'fileName and base64Data are required' });
     }
 
+    // Validate file extension
+    const ext = path.extname(fileName).toLowerCase();
+    if (!AVATAR_ALLOWED_EXTS.includes(ext)) {
+      return res.status(400).json({ error: `Invalid file type. Allowed: ${AVATAR_ALLOWED_EXTS.join(', ')}` });
+    }
+
+    // Check decoded size
     const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
     const buffer = Buffer.from(cleanBase64, 'base64');
+    if (buffer.length > MAX_AVATAR_SIZE_BYTES) {
+      return res.status(400).json({ error: 'Avatar image exceeds the 5 MB size limit' });
+    }
 
     const safeName = `${Date.now()}_${fileName.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
     const filePath = path.join(AVATARS_DIR, safeName);

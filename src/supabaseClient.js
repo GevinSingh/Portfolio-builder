@@ -2,28 +2,37 @@ import { createClient } from "@supabase/supabase-js";
 
 // ============================================================================
 // SUPABASE CONFIGURATION
-// Project URL: https://glhowtmwkgzylfoglwhy.supabase.co
-// Publishable Key: sb_publishable_yEAo5ZQIbFqNq6M3omLoBw_7b5hyrdS
+// Keys are read from .env / environment variables — never hardcoded here.
+// Required variables: VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY
 // ============================================================================
 
-const getEnvVar = (key, fallback) => {
+const getEnvVar = (key) => {
   if (typeof import.meta !== "undefined" && import.meta.env && import.meta.env[key]) {
     return import.meta.env[key];
   }
   if (typeof process !== "undefined" && process.env && process.env[key]) {
     return process.env[key];
   }
-  return fallback;
+  return null;
 };
 
-const SUPABASE_URL = getEnvVar(
-  "NEXT_PUBLIC_SUPABASE_URL",
-  getEnvVar("VITE_SUPABASE_URL", "https://glhowtmwkgzylfoglwhy.supabase.co")
-);
+const SUPABASE_URL =
+  getEnvVar("VITE_SUPABASE_URL") ||
+  getEnvVar("NEXT_PUBLIC_SUPABASE_URL") ||
+  getEnvVar("SUPABASE_URL");
 
-const SUPABASE_PUBLIC_KEY = getEnvVar(
-  "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
-  getEnvVar("VITE_SUPABASE_ANON_KEY", "sb_publishable_yEAo5ZQIbFqNq6M3omLoBw_7b5hyrdS")
-);
+const SUPABASE_PUBLIC_KEY =
+  getEnvVar("VITE_SUPABASE_ANON_KEY") ||
+  getEnvVar("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY") ||
+  getEnvVar("SUPABASE_ANON_KEY");
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY);
+if (!SUPABASE_URL || !SUPABASE_PUBLIC_KEY) {
+  console.warn(
+    "[Supabase] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY in environment variables. " +
+    "Cloud sync will be disabled. Check your .env file."
+  );
+}
+
+export const supabase = SUPABASE_URL && SUPABASE_PUBLIC_KEY
+  ? createClient(SUPABASE_URL, SUPABASE_PUBLIC_KEY)
+  : null;

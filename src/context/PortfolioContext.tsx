@@ -436,6 +436,8 @@ export const PortfolioProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
     setCurrentUser(null);
     localStorage.removeItem('portfoliox_current_user');
+    // Also clear the server-side JWT so authenticated API calls are revoked
+    try { localStorage.removeItem('portfoliox_server_token'); } catch {}
   };
 
   // Dynamic portfolio score calculation
