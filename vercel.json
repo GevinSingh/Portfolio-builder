@@ -9,7 +9,7 @@
       "destination": "/api"
     },
     {
-      "source": "/((?!api|uploads).*)" ,
+      "source": "/((?!api|uploads|sitemap.xml|robots.txt).*)",
       "destination": "/index.html"
     }
   ]
