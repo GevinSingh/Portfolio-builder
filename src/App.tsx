@@ -20,6 +20,7 @@ import { SignInPage } from './pages/SignInPage';
 import { SignUpPage } from './pages/SignUpPage';
 import { PrivacyPolicyPage } from './pages/PrivacyPolicyPage';
 import { TermsOfServicePage } from './pages/TermsOfServicePage';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 // Layout wrapper for standard pages (Navbar + Content + Footer)
 const StandardLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -172,8 +173,8 @@ export const App: React.FC = () => {
             }
           />
 
-          {/* Fallback to Home */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          {/* 404 Not Found */}
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </PortfolioProvider>
