@@ -21,4 +21,4 @@ Disallow: /api/
 Disallow: /uploads/
 
 # Sitemap location
-Sitemap: https://techhumans-portfolio-builder.vercel.app/sitemap.xml
+Sitemap: https://resume-to-web.vercel.app/sitemap.xml
