@@ -9,7 +9,7 @@
       "destination": "/api"
     },
     {
-      "source": "/((?!api|uploads|sitemap.xml|robots.txt).*)",
+      "source": "/((?!api|uploads|sitemap\\.xml|robots\\.txt|favicon\\.ico|favicon\\.svg|favicon-48x48\\.png|favicon-192x192\\.png|apple-touch-icon\\.png).*)",
       "destination": "/index.html"
     }
   ]
